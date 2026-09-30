@@ -1,0 +1,60 @@
+- insert:
+    - id: gate-v10
+      name: '@alankhronos/dsh-dispatch-gate'
+      config:
+        enforce: true
+        exemptMarker: 'SELF-DO:'
+        # ↓↓↓ 拦截范围仍可在这里调，不必改源码（与 v7/v8/v9 相同的调参入口） ↓↓↓
+        workTools:
+          - pwsh
+          - write
+          - edit
+        # 【修 B】ego_* 取数据类 → researchTools（显式名单优先级高于前缀默认）
+        researchTools:
+          - web_search
+          - web_fetch
+          - argo_search
+          - argo_fetch
+          - read_page
+          - x_search
+          - wide_research
+          - ego_http
+          - ego_navigate
+          - ego_snapshot
+          - ego_read_element
+          - ego_page_info
+        # 【修 B】前缀默认归类：ego_ 开头的其余工具默认按执行类（workTools）监控
+        #   —— 名单外不再有漏网通道。
+        workToolPrefixes:
+          - ego_
+        delegationTools:
+          - workflow
+          - subagent
+          - subagent_fork
+          - task_board_run
+        # 【修 A/C】v8 语义 = .mjs 后缀关键词：解析后某语句「首 token 是 node（或 node.exe）
+        #   且非引号 token 以 <关键词>.mjs 结尾」才算派发命令。
+        #   解析 = 去注释(引号外#) → 按 ;|&&||/换行 分段 → 引号感知分词；终止型旗标(-v/-e等)一票否决。
+        dispatchPatterns:
+          - model-hub
+        # v7 缺陷⑤语义保留：兜底窗 per-agent（不再跨会话残留）
+        subagentGraceMs: 10000
+        guardFailClosed: true
+        # 【运维3】日志目录（默认 <系统临时目录>/dispatch-gate；selftest 传临时目录覆盖，不依赖真实日志）
+        # logDir: <系统临时目录>/dispatch-gate
+        #
+        # 【修的是用户纪律：举证式 SELF-DO】v10 新增配置项：
+        #   requireDispatchEvidence: true （默认 true = 举证式；false = 退回 v9 声明式放行，仅应急用（迁移/回滚期），不要常开）
+        #   permKeywords: ['perm=', 'privilege'] （②-a 权限豁免通道的关键词 —— 跑本机命令/高风险写操作专用）
+        requireDispatchEvidence: true
+        #
+        # 【举证式】v10 新语义（无需配置项，代码内固有）：
+        #   1) SELF-DO: <理由> 从「声明式」升级为「举证式」，三通道证据任一命中才放行：
+        #      ②-a perm=<值> 或裸词 privilege —— 权限型自办（跑本机命令/高风险写操作），无需先派发；
+        #      ②-b tried=<派给谁> 且 reason=<为何必须你来> —— 结构化格式证据，缺任一拒绝；
+        #      ②-c 本会话存在派发尝试（成功或失败）—— 失败以 kind:"dispatch-failed" 入账，
+        #          「试过了但没成」可被统计（node tools/model-hub.mjs gate 需主模型同步 GATE_KINDS）。
+        #   2) 证据不足 → fail-closed 拒绝，拒因 reason='selfdo-no-evidence'（区别于没写 SELF-DO: 的
+        #      'no-dispatch-record' / 异常时 'guard-error'），拒绝话术含可操作指引。
+        #   3) 子代理会话（subagent/start / workflow/agent-start 权威事件识别）豁免前移到举证检查
+        #      之前 —— 子代理无派发能力，SELF-DO 是否举证不影响其豁免（遗留点②口径一致）。

@@ -1,0 +1,29 @@
+{
+  "name": "@alankhronos/dsh-dispatch-gate",
+  "version": "10.0.0",
+  "description": "DSH 插件：把「先委派给其他模型」从提示词纪律变成工具调用层的硬约束（举证式放行 + 行为账本）。",
+  "type": "module",
+  "license": "MIT",
+  "author": "AlanKhronos",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlanKhronos/dsh-dispatch-gate.git"
+  },
+  "homepage": "https://github.com/AlanKhronos/dsh-dispatch-gate#readme",
+  "bugs": {
+    "url": "https://github.com/AlanKhronos/dsh-dispatch-gate/issues"
+  },
+  "exports": { ".": "./index.js" },
+  "files": ["index.js", "cordis.patch.yml", "selftest.mjs", "README.md", "LICENSE"],
+  "engines": { "dsh": ">=0.1.7" },
+  "scripts": {
+    "test": "node selftest.mjs",
+    "lint": "node --check index.js"
+  },
+  "keywords": ["dsh", "dsh-plugin", "agent", "guard", "tool-call", "enforcement", "delegation"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "meta": {
+    "title": "派发闸门 (Dispatch Gate)",
+    "description": "在工具调用层强制「先委派给其他模型」：本会话没有派发记录的会话，无法执行 pwsh / write / edit 与查资料工具。支持权限型豁免（perm=）与结构化举证（tried= + reason=），每次放行与拦截都写入行为账本，可对账、可审计。"
+  }
+}
