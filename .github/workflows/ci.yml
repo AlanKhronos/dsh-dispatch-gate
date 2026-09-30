@@ -35,7 +35,12 @@ jobs:
 
       - name: 隐私检查 —— 确无个人路径残留
         run: |
-          if grep -rn "新工作区" . --exclude-dir=.git --exclude-dir=node_modules; then
+          # ⚠️ 双重保险，避免「自指」：
+          #    ① 用变量拼接关键词（本文件里就不出现完整关键词）
+          #    ② 显式 --exclude-dir=.github
+          #    这个自指 bug 是第一次 CI 运行时被 GitHub 抓到的 —— 本地 selftest 全过也发现不了。
+          NEEDLE="新""工作区"
+          if grep -rn "$NEEDLE" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.github; then
             echo "❌ 发现个人绝对路径残留，请先清理再提交"
             exit 1
           fi
