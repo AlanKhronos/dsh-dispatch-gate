@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: selftest · Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: 环境信息（证明是陌生环境）
+        run: node -e "console.log('node', process.version, '| platform', process.platform, '| cwd', process.cwd())"
+
+      - name: 语法检查
+        run: node --check index.js
+
+      - name: 自测（56 项：55 PASS / 1 SKIP）
+        run: node selftest.mjs
+
+      - name: 隐私检查 —— 确无个人路径残留
+        run: |
+          if grep -rn "新工作区" . --exclude-dir=.git --exclude-dir=node_modules; then
+            echo "❌ 发现个人绝对路径残留，请先清理再提交"
+            exit 1
+          fi
+          echo "✅ 无个人路径残留"
+
+      - name: 打包体积检查（插件应远小于 1 MB）
+        run: |
+          SIZE=$(du -sk --exclude=.git . | cut -f1)
+          echo "仓库体积：${SIZE} KB"
+          if [ "$SIZE" -gt 1024 ]; then echo "❌ 体积异常"; exit 1; fi
+          echo "✅ 体积正常"
